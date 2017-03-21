@@ -1,7 +1,7 @@
 package com.untitled.mobiledocumentscanner;
 
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
+        import android.os.Bundle;
 
 public class CameraActivity extends AppCompatActivity {
 
