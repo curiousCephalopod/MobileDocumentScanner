@@ -36,7 +36,6 @@ public class CameraActivity extends Activity {
         setContentView(R.layout.activity_camera);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         myContext = this;
-        //initialize();
     }
 
     //make sure back facing camera
