@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "388883437882",
+    "project_id": "mobiledocumentscanner"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:388883437882:android:9c4738589e394095",
+        "android_client_info": {
+          "package_name": "com.untitled.mobiledocumentscanner"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "388883437882-ja7idm9j3p88vdnrr4p7gbbnjpk53ev7.apps.googleusercontent.com",
+          "client_type": 3
+        },
+        {
+          "client_id": "388883437882-k84d4lch2n5t2gj6boh5n7erup2v7mm0.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.untitled.mobiledocumentscanner",
+            "certificate_hash": "168d35460daf71b1e05de6c261debe4254346c98"
+          }
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB-2pWKA1qC_2jug1EfCEDVsDbLNnX5pWk"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 1
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
