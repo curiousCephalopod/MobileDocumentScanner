@@ -1,6 +1,7 @@
 package com.untitled.mobiledocumentscanner;
 
 import android.content.Context;
+import android.content.Intent;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -15,29 +16,31 @@ import java.util.ArrayList;
  * Created by Josh on 12-Apr-17.
  */
 
-public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder>{
+public class GalleryAdapter extends RecyclerView.Adapter<GalleryAdapter.ViewHolder>{
     private ArrayList<CreateList> galleryList;
     private Context context;
 
-    public MyAdapter(Context context, ArrayList<CreateList> galleryList) {
+    public GalleryAdapter(Context context, ArrayList<CreateList> galleryList) {
         this.galleryList = galleryList;
         this.context = context;
     }
 
     @Override
-    public MyAdapter.ViewHolder onCreateViewHolder(ViewGroup viewGroup, int i) {
+    public GalleryAdapter.ViewHolder onCreateViewHolder(ViewGroup viewGroup, int i) {
         View view = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.cell_layout, viewGroup, false);
         return new ViewHolder(view);
     }
 
     @Override
-    public void onBindViewHolder(MyAdapter.ViewHolder viewHolder, int i) {
+    public void onBindViewHolder(GalleryAdapter.ViewHolder viewHolder, int i) {
         viewHolder.title.setText(galleryList.get(i).getImageTitle());
         viewHolder.img.setScaleType(ImageView.ScaleType.CENTER_CROP);
         viewHolder.img.setImageBitmap(galleryList.get(i).getImage());
         viewHolder.img.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+
+
                 Toast.makeText(context, "Image", Toast.LENGTH_SHORT).show();
             }
         });

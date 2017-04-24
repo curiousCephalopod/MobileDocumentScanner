@@ -33,7 +33,7 @@ public class GalleryActivity extends AppCompatActivity {
         RecyclerView.LayoutManager layoutManager = new GridLayoutManager(getApplicationContext(), 2);
         recyclerView.setLayoutManager(layoutManager);
         ArrayList<CreateList> createLists = prepareData();
-        MyAdapter adapter = new MyAdapter(getApplicationContext(), createLists);
+        GalleryAdapter adapter = new GalleryAdapter(getApplicationContext(), createLists);
         recyclerView.setAdapter(adapter);
     }
 
