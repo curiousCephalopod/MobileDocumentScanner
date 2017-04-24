@@ -4,7 +4,7 @@ CREATE TABLE Login
   userHash VARCHAR(128) NOT NULL,
   salt VARCHAR(128) NOT NULL,
   username VARCHAR(56) NOT NULL,
-  emailAddress VARCHAR(128) NOT NULL,
+  emailAddress VARCHAR(128) NOT NULL
   PRIMARY KEY(userID)
 );
 
@@ -20,6 +20,7 @@ CREATE TABLE ImageAccess
   userID INT(16) NOT NULL,
   imageID INT(128) NOT NULL,
   encryptionKey CHAR(30) NOT NULL,
+  docID INT(16) NOT NULL,
   PRIMARY KEY(userID, imageID),
   FOREIGN KEY(userID) REFERENCES Login(userID) ON UPDATE CASCADE ON DELETE CASCADE,
   FOREIGN KEY(imageID) REFERENCES ImageStore(imageID) ON UPDATE CASCADE ON DELETE CASCADE
@@ -35,6 +36,17 @@ CREATE TABLE Tag
 CREATE TABLE TagApplication
 (
   tagID INT(16) NOT NULL,
-  imageID INT(128) NOT NULL,
-  PRIMARY KEY(tagID, imageID)
+  docID INT(128) NOT NULL,
+  PRIMARY KEY(tagID, docID)
+);
+
+CREATE TABLE DocumentAllocation
+(
+  docID INT(16) NOT NULL,
+  docTitle VARCHAR(56) NOT NULL,
+  noPages INT(3) NOT NULL,
+  dateCreated DATE NOT NULL,
+  userID INT(16) NOT NULL,
+  PRIMARY KEY(docID),
+  FOREIGN KEY userID REFERENCES Login(userID)
 );
