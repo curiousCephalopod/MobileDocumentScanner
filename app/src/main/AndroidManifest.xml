@@ -27,16 +27,17 @@
         <activity android:name=".CameraActivity" />
         <activity
             android:name=".LoginActivity"
-            android:label="@string/title_activity_login">
-        </activity>
+            android:label="@string/title_activity_login"></activity>
         <activity
             android:name=".GalleryActivity"
             android:label="Gallery">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity android:name=".DetailActivity"></activity>
     </application>
 
 </manifest>
