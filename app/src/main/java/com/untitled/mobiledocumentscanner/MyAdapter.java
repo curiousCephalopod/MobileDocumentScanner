@@ -32,9 +32,9 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder>{
 
     @Override
     public void onBindViewHolder(MyAdapter.ViewHolder viewHolder, int i) {
-        viewHolder.title.setText(galleryList.get(i).getImage_title());
+        viewHolder.title.setText(galleryList.get(i).getImageTitle());
         viewHolder.img.setScaleType(ImageView.ScaleType.CENTER_CROP);
-        viewHolder.img.setImageResource((galleryList.get(i).getImage_id()));
+        viewHolder.img.setImageBitmap(galleryList.get(i).getImage());
         viewHolder.img.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

@@ -1,27 +1,29 @@
 package com.untitled.mobiledocumentscanner;
 
+import android.graphics.Bitmap;
+
 /**
  * Created by Josh on 12-Apr-17.
  */
 
 public class CreateList {
-    private String image_title;
-    private Integer image_id;
+    private String imageTitle;
+    private Bitmap image;
 
-    public String getImage_title(){
-        return image_title;
+    public String getImageTitle(){
+        return imageTitle;
     }
 
-    public void setImage_title(String android_version_name){
-        this.image_title = android_version_name;
+    public void setImageTitle(String title){
+        this.imageTitle = title;
     }
 
-    public Integer getImage_id(){
-        return image_id;
+    public Bitmap getImage(){
+        return image;
     }
 
-    public void setImage_id(Integer android_image_url){
-        this.image_id = android_image_url;
+    public void setImage(Bitmap image){
+        this.image = image;
     }
 
 

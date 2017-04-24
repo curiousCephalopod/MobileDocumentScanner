@@ -4,7 +4,7 @@ CREATE TABLE Login
   userHash VARCHAR(128) NOT NULL,
   salt VARCHAR(128) NOT NULL,
   username VARCHAR(56) NOT NULL,
-  emailAddress VARCHAR(128) NOT NULL
+  emailAddress VARCHAR(128) NOT NULL,
   PRIMARY KEY(userID)
 );
 
