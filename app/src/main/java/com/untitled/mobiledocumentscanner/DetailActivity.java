@@ -4,11 +4,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.AsyncTask;
-import android.os.Build;
 import android.os.Bundle;
-import android.support.annotation.RequiresApi;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Base64;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ListView;
@@ -25,7 +24,7 @@ import java.util.List;
 
 public class DetailActivity extends AppCompatActivity{
     private Document doc;
-    ArrayList<Bitmap> images;
+    ArrayList<Page> pages;
     ArrayList<String[]> tags;
     JSONParser jParser = new JSONParser();
     TagAdapter tagAdapter;
@@ -34,8 +33,8 @@ public class DetailActivity extends AppCompatActivity{
     private static String urlTag = "http://10.0.2.2/DocumentScanner/find_tag.php";
     private static String urlCreateTag = "http://10.0.2.2/DocumentScanner/create_tag.php";
     private static String urlApplyTag = "http://10.0.2.2/DocumentScanner/apply_tag.php";
+    private static String urlPages = "http://10.0.2.2/DocumentScanner/retrieve_pages.php";
 
-    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -56,13 +55,16 @@ public class DetailActivity extends AppCompatActivity{
         tags = new ArrayList<>();
         new retrieveTags().execute();
 
-        this.images = doc.populatePages();
-        ViewPager viewPager = (ViewPager)findViewById(R.id.imagePreview);
-        ViewPagerAdapter viewAdapter = new ViewPagerAdapter(this, images);
-        viewPager.setAdapter(viewAdapter);
+        new retrievePages().execute();
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        new retrievePages().execute();
+    }
+
     public void addTag(View v) {
         EditText newTag = (EditText) findViewById(R.id.newTag);
         String tag = newTag.getText().toString().toLowerCase();
@@ -141,6 +143,55 @@ public class DetailActivity extends AppCompatActivity{
             }
 
             return null;
+        }
+    }
+
+    class retrievePages extends AsyncTask<String, String, String> {
+
+        @Override
+        protected String doInBackground(String... params) {
+            pages = new ArrayList<>();
+            // Build params
+            List<NameValuePair> pageParams = new ArrayList<NameValuePair>();
+            pageParams.add(new BasicNameValuePair("docID", doc.getID() + ""));
+            // Retrieve JSON
+            JSONObject pagesJson = jParser.makeHttpRequest(urlPages, "POST", pageParams);
+
+            try {
+                // Check for Success
+                int pagesSuccess = pagesJson.getInt("success");
+
+                if (pagesSuccess == 1) {
+                    JSONArray pageJson = pagesJson.getJSONArray("pages");
+
+                    // Loop
+                    for (int i = 0; i < pageJson.length(); i++) {
+                        JSONObject pageObject = pageJson.getJSONObject(i);
+                        int id = pageObject.getInt("imageID");
+                        Bitmap image = BitmapUtil.getImage(Base64.decode(pageObject.getString("image"), Base64.DEFAULT));
+                        String encryptionKey = pageObject.getString("encryptionKey");
+                        int pageNo = i + 1;
+
+                        Page page = new Page(id, image, encryptionKey, pageNo);
+                        pages.add(page);
+                    }
+                }
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+
+            return null;
+        }
+
+        protected void onPostExecute(String fileURL) {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    ViewPagerAdapter viewAdapter = new ViewPagerAdapter(getApplicationContext(), pages, false, doc.getID());
+                    ViewPager viewPager = (ViewPager) findViewById(R.id.imagePreview);
+                    viewPager.setAdapter(viewAdapter);
+                }
+            });
         }
     }
 

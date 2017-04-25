@@ -9,6 +9,7 @@
 
     <!-- To get permission for the use of the Camera hardware. -->
     <uses-feature android:name="android.hardware.camera" />
+
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
@@ -25,6 +26,7 @@
             android:label="Camera">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
@@ -36,9 +38,12 @@
             android:label="Gallery">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
         <activity android:name=".DetailActivity" />
+        <activity android:name=".ImageActivity"></activity>
     </application>
+
 </manifest>

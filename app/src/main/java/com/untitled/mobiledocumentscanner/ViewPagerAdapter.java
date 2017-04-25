@@ -1,9 +1,7 @@
 package com.untitled.mobiledocumentscanner;
 
 import android.content.Context;
-import android.graphics.Bitmap;
 import android.support.v4.view.PagerAdapter;
-import android.support.v4.view.ViewPager;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
@@ -16,16 +14,20 @@ import java.util.ArrayList;
 
 public class ViewPagerAdapter extends PagerAdapter{
     private Context context;
-    private ArrayList<Bitmap> images;
+    private ArrayList<Page> pages;
+    private boolean fullscreen;
+    private int docID;
 
-    public ViewPagerAdapter(Context context, ArrayList<Bitmap> images){
+    public ViewPagerAdapter(Context context, ArrayList<Page> pages, Boolean fullscreen, int docID) {
         this.context = context;
-        this.images = images;
+        this.pages = pages;
+        this.fullscreen = fullscreen;
+        this.docID = docID;
     }
 
     @Override
     public int getCount() {
-        return images.size();
+        return pages.size();
     }
 
     @Override
@@ -34,10 +36,18 @@ public class ViewPagerAdapter extends PagerAdapter{
     }
 
     @Override
-    public Object instantiateItem(ViewGroup container, int i){
-        ImageView imageView = new ImageView(context);
+    public Object instantiateItem(final ViewGroup container, int i) {
+        final ImageView imageView = new ImageView(context);
         imageView.setScaleType(ImageView.ScaleType.FIT_CENTER);
-        imageView.setImageBitmap(images.get(i));
+        imageView.setImageBitmap(pages.get(i).getImage());
+        if (!fullscreen) {
+            imageView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    ImageActivity.start(context, pages, docID);
+                }
+            });
+        }
         container.addView(imageView, 0);
 
         return imageView;

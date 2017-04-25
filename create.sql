@@ -61,3 +61,8 @@ CREATE TABLE TagApplication
 CREATE TRIGGER pageIncrement AFTER INSERT ON ImagePage
 FOR EACH ROW
 UPDATE Document SET noPages = noPages + 1 WHERE docID = NEW.docID;
+
+CREATE TRIGGER clearPages AFTER DELETE ON ImagePage
+FOR EACH ROW
+DELETE FROM ImageStore
+WHERE imageID NOT IN (SELECT imageID FROM ImagePage);
