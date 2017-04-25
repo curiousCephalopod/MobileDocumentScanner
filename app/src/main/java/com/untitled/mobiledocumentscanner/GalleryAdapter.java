@@ -7,7 +7,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import java.util.ArrayList;
 
@@ -16,10 +15,10 @@ import java.util.ArrayList;
  */
 
 public class GalleryAdapter extends RecyclerView.Adapter<GalleryAdapter.ViewHolder>{
-    private ArrayList<CreateList> galleryList;
+    private ArrayList<Document> galleryList;
     private Context context;
 
-    public GalleryAdapter(Context context, ArrayList<CreateList> galleryList) {
+    public GalleryAdapter(Context context, ArrayList<Document> galleryList) {
         this.galleryList = galleryList;
         this.context = context;
     }
@@ -31,16 +30,16 @@ public class GalleryAdapter extends RecyclerView.Adapter<GalleryAdapter.ViewHold
     }
 
     @Override
-    public void onBindViewHolder(GalleryAdapter.ViewHolder viewHolder, int i) {
-        viewHolder.title.setText(galleryList.get(i).getImageTitle());
+    public void onBindViewHolder(GalleryAdapter.ViewHolder viewHolder, final int i) {
+        viewHolder.title.setText(galleryList.get(i).getTitle());
         viewHolder.img.setScaleType(ImageView.ScaleType.CENTER_CROP);
-        viewHolder.img.setImageBitmap(galleryList.get(i).getImage());
+        viewHolder.img.setImageBitmap(galleryList.get(i).getCover());
         viewHolder.img.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                // Open Details with document
+                DetailActivity.start(context, galleryList.get(i));
 
-
-                Toast.makeText(context, "Image", Toast.LENGTH_SHORT).show();
             }
         });
     }

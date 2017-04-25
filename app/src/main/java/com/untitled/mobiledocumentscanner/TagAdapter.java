@@ -1,8 +1,10 @@
 package com.untitled.mobiledocumentscanner;
 
 import android.content.Context;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.support.annotation.RequiresApi;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,10 +13,13 @@ import android.widget.Button;
 import android.widget.ListAdapter;
 import android.widget.TextView;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
+import org.apache.http.NameValuePair;
+import org.apache.http.message.BasicNameValuePair;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by J on 25-Apr-17.
@@ -24,6 +29,9 @@ public class TagAdapter extends BaseAdapter implements ListAdapter {
     private ArrayList<String[]> tags;
     private int docID;
     private Context context;
+    JSONParser jParser = new JSONParser();
+
+    private static String urlTags = "http://10.0.2.2/DocumentScanner/remove_tag.php";
 
     public TagAdapter(ArrayList<String[]> tags, int docID, Context context) {
         this.tags = tags;
@@ -62,21 +70,43 @@ public class TagAdapter extends BaseAdapter implements ListAdapter {
             @RequiresApi(api = Build.VERSION_CODES.KITKAT)
             @Override
             public void onClick(View v) {
-                try (Connection conn = DataSource.getConnection()) {
-                    PreparedStatement ps = conn.prepareStatement("DELETE FROM TagApplication WHERE tagID = ? AND docID = ?");
-
-                    ps.setString(1, tags.get(position)[0]);
-                    ps.setInt(2, docID);
-                    ps.executeUpdate();
-                    ps.close();
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                }
-                tags.remove(position);
-                notifyDataSetChanged();
+                new removeTag().execute(position + "");
             }
         });
 
         return view;
+    }
+
+    class removeTag extends AsyncTask<String, String, String> {
+
+        @Override
+        protected String doInBackground(String... args) {
+            // Building Parameters
+            List<NameValuePair> tagParams = new ArrayList<NameValuePair>();
+            tagParams.add(new BasicNameValuePair("docID", docID + ""));
+
+            tagParams.add(new BasicNameValuePair("tagID", tags.get(Integer.parseInt(args[0]))[0]));
+            Log.d("INFO", args[0]);
+            // Retrieve JSON
+            JSONObject tagsJson = jParser.makeHttpRequest(urlTags, "POST", tagParams);
+
+            Log.d("INFO", tagsJson.toString());
+            try {
+                // Check for Success
+                int tagsSuccess = tagsJson.getInt("success");
+
+                if (tagsSuccess == 1) {
+                    tags.remove(Integer.parseInt(args[0]));
+                }
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+
+            return null;
+        }
+
+        protected void onPostExecute(String fileURL) {
+            notifyDataSetChanged();
+        }
     }
 }
