@@ -3,26 +3,25 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package shtools;
+package com.untitled.mobiledocumentscanner;
 
-import com.mycompany.academigyraeg.SimpleDataSource;
-import java.awt.image.BufferedImage;
-import java.awt.image.DataBufferByte;
-import java.awt.image.WritableRaster;
+
+import android.os.Build;
+import android.support.annotation.RequiresApi;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.math.BigInteger;
-import java.nio.file.Files;
 import java.security.Key;
 import java.security.SecureRandom;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+
 import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;
-import javax.imageio.ImageIO;
 
 /**
  *
@@ -38,15 +37,15 @@ public class imageSubmitter {
     PreparedStatement currentPageS = null;
     PreparedStatement updatePageS = null;
     PreparedStatement updateAccessS = null;
-    
-    String IDCheck = "SELECT * FROM Storage WHERE imageID = ?;";
-    
-    String uploadImage = "INSERT INTO Storage(imageID, image) VALUES((?, ?));";
 
-    String checkCurrentPage = "SELECT noPages FROM DocumentAllocation WHERE docID = ?";
-    String updatePageNo = "UPDATE DocumentAllocation SET noPages = ? WHERE docID = ?";
+    String IDCheck = "SELECT * FROM ImageStore WHERE imageID = ?;";
 
-    String accessUpdate = "INSERT INTO ImageAccess VALUES(?, ?, ?, ?);";
+    String uploadImage = "INSERT INTO ImageStore(imageID, image) VALUES((?, ?));";
+
+    String checkCurrentPage = "SELECT noPages FROM Document WHERE docID = ?";
+    String updatePageNo = "UPDATE Document SET noPages = ? WHERE docID = ?";
+
+    String accessUpdate = "INSERT INTO ImageStore VALUES(?, ?, ?, ?);";
     
     
     int userID;
@@ -74,8 +73,7 @@ public class imageSubmitter {
             
             image = new File("E:\\documents\\pictures\\profilepic1.jpg");
             inputStream = new FileInputStream(image);
-            fileContent = Files.readAllBytes(image.toPath());
-            
+            //fileContent = Files.readAllBytes(image.toPath());
         }
         catch(IOException exception)
         {
@@ -112,10 +110,11 @@ public class imageSubmitter {
      * CHECK THIS THRICE, FOR THE LOVE OF GOD
      * @return 
      */
+    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     public boolean simpleUploadImage()
     {
-        
-        try (Connection conn = SimpleDataSource.getConnection()){
+
+        try (Connection conn = DataSource.getConnection()) {
             
             
             
@@ -178,7 +177,7 @@ public class imageSubmitter {
     {
         return fileContent;
     }
-    
+    /*
     public byte[] extractBytes (String ImageName) throws IOException {
         //USED FROM STACK OVERFLOW
         // open image
@@ -190,7 +189,7 @@ public class imageSubmitter {
         DataBufferByte data   = (DataBufferByte) raster.getDataBuffer();
 
         return ( data.getData() );
-   }
+   }*/
     
     public byte[] encryptImage(String userKey)
     {

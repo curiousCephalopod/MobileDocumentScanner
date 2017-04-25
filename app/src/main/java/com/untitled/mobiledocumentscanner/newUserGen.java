@@ -3,17 +3,19 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package shtools;
+package com.untitled.mobiledocumentscanner;
 
-import java.io.IOException;
+import android.os.Build;
+import android.support.annotation.RequiresApi;
+
 import java.io.InputStream;
 import java.math.BigInteger;
 import java.security.SecureRandom;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+
+;
 
 /**
  *
@@ -31,26 +33,15 @@ public class newUserGen {
     String password;
 
     String salt;
-    
-    public newUserGen()
-    {
-        try {
-            com.mycompany.academigyraeg.SimpleDataSource.init(stream);
-        } catch (IOException ex) {
-            Logger.getLogger(newUserGen.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (ClassNotFoundException ex) {
-            Logger.getLogger(newUserGen.class.getName()).log(Level.SEVERE, null, ex);
-        }
-    }       
-    
-    
+
+    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     public void addNewUser(String username, String password, String email)
     {
         salt = new BigInteger(130, random).toString(32);
 
         this.password = password;
 
-        try (Connection conn = SimpleDataSource.getConnection()){
+        try (Connection conn = DataSource.getConnection()) {
             addUserS = conn.prepareStatement(newUser);
             addUserS.setString(1, password);
             addUserS.setString(2, salt);

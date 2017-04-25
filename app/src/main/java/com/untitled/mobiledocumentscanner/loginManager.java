@@ -3,9 +3,11 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package shtools;
+package com.untitled.mobiledocumentscanner;
 
-import com.mycompany.academigyraeg.SimpleDataSource;
+import android.os.Build;
+import android.support.annotation.RequiresApi;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -32,10 +34,11 @@ public class loginManager {
         this.username = username;
         this.password = password;
     }
-    
+
+    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     public boolean login()
     {
-        try (Connection conn = SimpleDataSource.getConnection()){
+        try (Connection conn = DataSource.getConnection()) {
             loginCheckS = conn.prepareStatement(passCheck);
             loginCheckS.setString(1, username);
             loginCheckS.setString(2, password);
@@ -56,10 +59,11 @@ public class loginManager {
         }
         
     }
-    
+
+    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     public void hashPass()
     {
-        try (Connection conn = SimpleDataSource.getConnection()){
+        try (Connection conn = DataSource.getConnection()) {
             getSaltS = conn.prepareStatement(getSalt);
             getSaltS.setString(1, username);
             rs = getSaltS.executeQuery();

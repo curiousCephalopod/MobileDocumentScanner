@@ -3,9 +3,11 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package shtools;
+package com.untitled.mobiledocumentscanner;
 
-import com.mycompany.academigyraeg.SimpleDataSource;
+import android.os.Build;
+import android.support.annotation.RequiresApi;
+
 import java.io.File;
 import java.security.Key;
 import java.sql.Blob;
@@ -15,6 +17,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+
 import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;
 
@@ -23,16 +26,16 @@ import javax.crypto.spec.SecretKeySpec;
  * @author Ed
  */
 public class imageRetriever {
-    String selection = "SELECT imageID, image, EncryptionKey FROM Storage"
-            + "INNER JOIN ImageAccess ON ImageAccess.imageID = Storage.imageID"
+    String selection = "SELECT imageID, image, EncryptionKey FROM ImageStore"
+            + "INNER JOIN ImagePage ON ImagePage.imageID = ImageStore.imageID"
             + "WHERE docID = ? ORDER BY pageNo";
-    
-    String selectionF = "SELECT imageID, image, EncryptionKey FROM Storage"
-            + "INNER JOIN ImageAccess ON ImageAccess.imageID = Storage.imageID"
+
+    String selectionF = "SELECT imageID, image, EncryptionKey FROM ImageStore"
+            + "INNER JOIN ImagePage ON ImagePage.imageID = ImageStore.imageID"
             + "WHERE docID = ? AND pageNo = 1";
-    
-    String docGet = "SELECT docID, docTitle, tag FROM DocumentAllocation"
-            + "INNER JOIN TagApplication ON DocumentAllocation.docID = TagApplication.docID"
+
+    String docGet = "SELECT docID, docTitle, tag FROM Document"
+            + "INNER JOIN TagApplication ON Document.docID = TagApplication.docID"
             + "INNER JOIN Tag ON TagApplication.tagID = Tag.tagID"
             + "WHERE userID = ?";
     File bufferImage;
@@ -44,13 +47,14 @@ public class imageRetriever {
     PreparedStatement docSelectionS = null;
     ResultSet drs;
     ResultSet irs;
-    
+
+    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     public imageRetriever(int userID, String password)
     {
         this.password = password;
         this.userID = userID;
         //get doc result set
-        try (Connection conn = SimpleDataSource.getConnection()){
+        try (Connection conn = DataSource.getConnection()) {
             
             
             docSelectionS = conn.prepareStatement(docGet);
@@ -62,7 +66,8 @@ public class imageRetriever {
             System.out.println("SQL error(doc retrieval)");
         }
     }
-    
+
+    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     public ArrayList getDocs()
     {
         ArrayList out = new ArrayList();
@@ -73,7 +78,7 @@ public class imageRetriever {
         int pages;
         byte[] cover;
         //import and store each set of document metadata
-        try (Connection conn = SimpleDataSource.getConnection())
+        try (Connection conn = DataSource.getConnection())
         {
             //while there are documents left to be processed
             while(!drs.isAfterLast())
@@ -89,9 +94,9 @@ public class imageRetriever {
                 Blob b = irs.getBlob("image");
                 cover = b.getBytes(1, (int)b.length());
                 //create doc summary
-                temp = new Document(id, title, date, pages, cover);
+                //temp = new Document(id, title, date, pages, cover);
                 //add temp file to output
-                out.add(temp);
+                //out.add(temp);
                 //advance to next doc
                 drs.next();
             }
@@ -101,15 +106,16 @@ public class imageRetriever {
         }
         return out;
     }
-    
+
+    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     public ArrayList retrieveImages(int docID)
     {
         ArrayList out = new ArrayList();
         byte[] temp;
         Blob tempBlob;
-        
-        
-        try (Connection conn = SimpleDataSource.getConnection()){
+
+
+        try (Connection conn = DataSource.getConnection()) {
             selectionS = conn.prepareStatement(selection);
             selectionS.setInt(1,docID);
             irs = selectionS.executeQuery();

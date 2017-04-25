@@ -32,6 +32,10 @@ public class Document implements Serializable{
         return list;
     }
 
+    public int getID() {
+        return id;
+    }
+
     public String getTitle() {
         return title;
     }
