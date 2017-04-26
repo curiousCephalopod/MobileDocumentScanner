@@ -1,208 +1,157 @@
 package com.untitled.mobiledocumentscanner;
 
+import android.Manifest;
 import android.content.Context;
+import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.hardware.Camera;
-import android.hardware.Camera.CameraInfo;
 import android.hardware.Camera.PictureCallback;
+import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
-import android.os.Environment;
+import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Base64;
+import android.util.Log;
 import android.view.View;
-import android.view.View.OnClickListener;
-import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.FrameLayout;
-import android.widget.LinearLayout;
+import android.widget.Toast;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import android.util.Log;
+import org.apache.http.NameValuePair;
+import org.apache.http.message.BasicNameValuePair;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class CameraActivity extends AppCompatActivity {
+    private ImageSurfaceView imageSurfaceView;
+    private Camera camera;
 
-    private Camera mCamera;
-    private CameraPreview mCameraPreview;
+    private FrameLayout cameraPreviewLayout;
+
+    private String docID;
+    private String pageNo;
+    String ip;
+
+    private String urlCreatePage;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_camera);
-        mCamera = getCameraInstance();
-        mCameraPreview = new CameraPreview(this,mCamera);
-        FrameLayout preview = (FrameLayout) findViewById(R.id.camera_preview);
-        preview.addView(mCameraPreview);
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
-        Button captureButton = (Button) findViewById(R.id.button_capture);
-        captureButton.setOnClickListener(new View.OnClickListener(){
-            @Override
-            public void onClick(View v){
-                mCamera.takePicture(null, null, mPicture);
-            }
-        });
-    }
+        Bundle bundle = getIntent().getExtras();
+        docID = bundle.getString("docID");
+        pageNo = bundle.getString("pageNo");
+        ip = bundle.getString("ip");
 
-    /**
-     * Helper method to access camera returns null if it cannot get camera or doesn't
-     * exist
-     * @return
-     */
-    private Camera getCameraInstance()
-    {
-        Camera camera = null;
-        try {
-            camera = Camera.open();
-        } catch (Exception e) {
+        urlCreatePage = "http://" + ip + "/DocumentScanner/create_page.php";
 
+        if (Build.VERSION.SDK_INT >= 23) {
+            requestPermission();
         }
-        return camera;
+
+        Context context = getApplicationContext();
+        PackageManager packageManager = context.getPackageManager();
+        if (!packageManager.hasSystemFeature(PackageManager.FEATURE_CAMERA_FRONT)) {
+            Toast.makeText(context, "This device does not have a front camera.", Toast.LENGTH_SHORT).show();
+            finish();
+        }
     }
 
-    PictureCallback mPicture = new PictureCallback() {
+    public static void start(Context context, int docID, int pageNo, String ip) {
+        Intent intent = new Intent(context, CameraActivity.class);
+        intent.putExtra("docID", docID + "");
+        intent.putExtra("pageNo", pageNo + "");
+        intent.putExtra("ip", ip);
+
+        context.startActivity(intent);
+    }
+
+    private void requestPermission() {
+        if (ActivityCompat.shouldShowRequestPermissionRationale(CameraActivity.this, Manifest.permission.CAMERA)) {
+            Toast.makeText(CameraActivity.this, "Write External Storage permission allows us to do store images. Please allow this permission in App Settings.", Toast.LENGTH_LONG).show();
+        } else {
+            ActivityCompat.requestPermissions(CameraActivity.this, new String[]{Manifest.permission.CAMERA}, 1);
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
+        switch (requestCode) {
+            case 1:
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    Log.e("value", "Permission Granted, Now you can use the camera.");
+                    cameraPreviewLayout = (FrameLayout) findViewById(R.id.cameraPreview);
+
+                    camera = Camera.open();
+                    imageSurfaceView = new ImageSurfaceView(CameraActivity.this, camera);
+                    cameraPreviewLayout.addView(imageSurfaceView);
+
+                    final PictureCallback pictureCallback = new PictureCallback() {
+                        @Override
+                        public void onPictureTaken(byte[] data, Camera camera) {
+                            if (data == null) {
+                                Log.d("INFO", "Captured image is empty.");
+                                return;
+                            }
+
+                            new addPage().execute(Base64.encodeToString(data, Base64.DEFAULT));
+                            finish();
+                        }
+                    };
+
+                    Button captureButton = (Button) findViewById(R.id.cameraCapture);
+                    captureButton.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            camera.takePicture(null, null, pictureCallback);
+                        }
+                    });
+
+                } else {
+                    Log.e("value", "Permission Denied, You cannot use the camera.");
+                    finish();
+                }
+                break;
+        }
+    }
+
+    class addPage extends AsyncTask<String, String, String> {
+
         @Override
-        public void onPictureTaken(byte[] data, Camera camera) {
-            File pictureFile = getOutputMediaFile();
-            if (pictureFile == null){
-                return;
-            }
+        protected String doInBackground(String... params) {
+
+            JSONParser jParser = new JSONParser();
+            List<NameValuePair> pageParams = new ArrayList<NameValuePair>();
+            pageParams.add(new BasicNameValuePair("docID", docID));
+            pageParams.add(new BasicNameValuePair("image", params[0]));
+            pageParams.add(new BasicNameValuePair("encryptionKey", ""));
+            pageParams.add(new BasicNameValuePair("pageNo", pageNo));
+
+            // Retrieve JSON
+            JSONObject newPage = jParser.makeHttpRequest(urlCreatePage, "POST", pageParams);
+
+            Log.d("INFO", newPage.toString());
             try {
-                FileOutputStream fos = new FileOutputStream(pictureFile);
-                fos.write(data);
-                fos.close();
-            } catch (FileNotFoundException e) {
+                // Check for success
+                int newPageSuccess = newPage.getInt("success");
 
-            }catch (IOException e){
-
+                if (newPageSuccess == 1) {
+                    // Page Added
+                } else {
+                    Log.d("INFO", "failed");
+                }
+            } catch (JSONException e) {
+                e.printStackTrace();
             }
-        }
-    };
 
-    private static File getOutputMediaFile(){
-        File mediaStorageDir = new File(
-                Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES),
-                "DocumentScanner");
-        if (!mediaStorageDir.exists()){
-            if(!mediaStorageDir.mkdirs()){
-                Log.d("DocumentScanner", "failed to create directory");
-                return null;
-            }
+            return null;
         }
-        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss")
-                .format(new Date());
-        File mediaFile;
-        mediaFile = new File(mediaStorageDir.getPath()+ File.separator
-        + "IMG_" + timeStamp + ".jpg");
-
-        return mediaFile;
     }
-//    //make sure back facing camera
-//    private int findBackFacingCamera() {
-//        int cameraID = -1;
-//        int numberOfCamera = Camera.getNumberOfCameras();
-//        for (int i = 0; i < numberOfCamera; i++) {
-//            CameraInfo info = new CameraInfo();
-//            Camera.getCameraInfo(i, info);
-//            if (info.facing == CameraInfo.CAMERA_FACING_BACK) {
-//                cameraID = i;
-//                break;
-//            }
-//        }
-//        return cameraID;
-//    }
-//
-//    //init camera
-//    public void getCamera() {
-//        int cameraID = findBackFacingCamera();
-//        if (cameraID >= 0) {
-//            //open backfacingcamera set picture callback, refresh prev
-//            mCamera = Camera.open(cameraID);
-//            mPicture = getPictureCallback();
-//            mPreview.refreshCamera(mCamera);
-//        }
-//    }
-//
-//    @Override
-//    protected void onPause() {
-//        super.onPause();
-//        //when on Pause, release camera in order to be used from other applications
-//        releaseCamera();
-//    }
-//
-//    private boolean hasCamera(Context context) {
-//        //check if has camera
-//        if (context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA)) {
-//            return true;
-//        } else {
-//            return false;
-//        }
-//    }
-//
-//    private PictureCallback getPictureCallback() {
-//        PictureCallback picture = new PictureCallback() {
-//
-//            @Override
-//            public void onPictureTaken(byte[] data, Camera camera) {
-//                //make a new picture file
-//                File pictureFile = getOutputMediaFile();
-//
-//                if (pictureFile == null) {
-//                    return;
-//                }
-//                try {
-//                    //write the file
-//                    FileOutputStream fos = new FileOutputStream(pictureFile);
-//                    fos.write(data);
-//                    fos.close();
-//
-//                } catch (FileNotFoundException e) {
-//                } catch (IOException e) {
-//                }
-//
-//                //refresh camera to continue preview
-//                mPreview.refreshCamera(mCamera);
-//            }
-//        };
-//        return picture;
-//    }
-//
-//    OnClickListener captrureListener = new OnClickListener() {
-//        @Override
-//        public void onClick(View v) {
-//            mCamera.takePicture(null, null, mPicture);
-//        }
-//    };
-//
-//    //make picture and save to a folder
-//    private static File getOutputMediaFile() {
-//        //make a new file directory inside the "sdcard" folder
-//        File mediaStorageDir = new File("/sdcard/", "JCG Camera");
-//
-//        //if this "JCGCamera folder does not exist
-//        if (!mediaStorageDir.exists()) {
-//            //if you cannot make this folder return
-//            if (!mediaStorageDir.mkdirs()) {
-//                return null;
-//            }
-//        }
-//
-//        //take the current timeStamp
-//        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-//        File mediaFile;
-//        //and make a media file:
-//        mediaFile = new File(mediaStorageDir.getPath() + File.separator + "IMG_" + timeStamp + ".jpg");
-//
-//        return mediaFile;
-//    }
-//
-//    private void releaseCamera() {
-//        // stop and release camera
-//        if (mCamera != null) {
-//            mCamera.release();
-//            mCamera = null;
-//        }
-//    }
 }

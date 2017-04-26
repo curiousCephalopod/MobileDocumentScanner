@@ -14,9 +14,9 @@ public class Page implements Serializable {
     private String encryptionKey;
     private int pageNo;
 
-    public Page(int imageID, Bitmap image, String encryptionKey, int pageNo) {
+    public Page(int imageID, byte[] image, String encryptionKey, int pageNo) {
         this.imageID = imageID;
-        this.image = BitmapUtil.getBytes(image);
+        this.image = image;
         this.encryptionKey = encryptionKey;
         this.pageNo = pageNo;
     }

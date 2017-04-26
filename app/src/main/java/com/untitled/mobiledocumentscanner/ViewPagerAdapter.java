@@ -17,12 +17,14 @@ public class ViewPagerAdapter extends PagerAdapter{
     private ArrayList<Page> pages;
     private boolean fullscreen;
     private int docID;
+    String ip;
 
-    public ViewPagerAdapter(Context context, ArrayList<Page> pages, Boolean fullscreen, int docID) {
+    public ViewPagerAdapter(Context context, ArrayList<Page> pages, Boolean fullscreen, int docID, String id) {
         this.context = context;
         this.pages = pages;
         this.fullscreen = fullscreen;
         this.docID = docID;
+        this.ip = ip;
     }
 
     @Override
@@ -41,12 +43,21 @@ public class ViewPagerAdapter extends PagerAdapter{
         imageView.setScaleType(ImageView.ScaleType.FIT_CENTER);
         imageView.setImageBitmap(pages.get(i).getImage());
         if (!fullscreen) {
-            imageView.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    ImageActivity.start(context, pages, docID);
-                }
-            });
+            if (pages.get(i).getImageID() != -1) {
+                imageView.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        ImageActivity.start(context, pages, docID, ip);
+                    }
+                });
+            } else {
+                imageView.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        CameraActivity.start(context, docID, 1, ip);
+                    }
+                });
+            }
         }
         container.addView(imageView, 0);
 

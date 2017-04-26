@@ -8,4 +8,8 @@
         <item name="colorAccent">@color/colorAccent</item>
     </style>
 
+    <style name="dialogTheme" parent="@style/Theme.AppCompat" />
+
+    <style name="CameraTheme" parent="Theme.AppCompat.Light.NoActionBar" />
+
 </resources>

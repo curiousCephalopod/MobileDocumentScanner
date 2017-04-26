@@ -5,19 +5,12 @@
  */
 package com.untitled.mobiledocumentscanner;
 
-import android.os.Build;
-import android.support.annotation.RequiresApi;
-
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-
 /**
  *
  * @author Ed
  */
 public class loginManager {
+    /*
     String username;
     String password;
     
@@ -75,4 +68,5 @@ public class loginManager {
             System.out.println("SQL error(login)");
         }
     }
+    */
 }

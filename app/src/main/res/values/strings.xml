@@ -15,4 +15,5 @@
     </string>
     <string name="title_activity_login">Sign in</string>
     <string name="action_sign_in_short">Sign in</string>
+    <string name="server_ip">agzsluungg.localtunnel.me</string>
 </resources>

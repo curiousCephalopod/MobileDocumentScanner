@@ -21,11 +21,12 @@ public class ImageActivity extends AppCompatActivity {
     ArrayList<Page> pages;
     int docID;
     ViewPager viewPager;
+    String ip;
 
     ViewPagerAdapter viewAdapter;
     JSONParser jParser = new JSONParser();
 
-    private static String urlRemovePage = "http://10.0.2.2/DocumentScanner/remove_page.php";
+    private String urlRemovePage;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -35,24 +36,29 @@ public class ImageActivity extends AppCompatActivity {
         Bundle bundle = getIntent().getExtras();
         this.pages = (ArrayList<Page>) bundle.get("pages");
         this.docID = bundle.getInt("docID");
+        this.ip = bundle.getString("ip");
 
-        viewAdapter = new ViewPagerAdapter(getApplicationContext(), pages, true, docID);
+        urlRemovePage = "http://" + ip + "/DocumentScanner/remove_page.php";
+
+
+        viewAdapter = new ViewPagerAdapter(getApplicationContext(), pages, true, docID, ip);
         viewPager = (ViewPager) findViewById(R.id.largeImagePreview);
         viewPager.setAdapter(viewAdapter);
     }
 
     public void addPage(View v) {
-
+        CameraActivity.start(getApplicationContext(), docID, pages.size() + 1, ip);
     }
 
     public void deletePage(View v) {
         new deletePage().execute((viewPager.getCurrentItem() + 1) + "");
     }
 
-    public static void start(Context context, ArrayList<Page> pages, int docID) {
+    public static void start(Context context, ArrayList<Page> pages, int docID, String ip) {
         Intent intent = new Intent(context, ImageActivity.class);
         intent.putExtra("pages", pages);
         intent.putExtra("docID", docID);
+        intent.putExtra("ip", ip);
 
         context.startActivity(intent);
     }

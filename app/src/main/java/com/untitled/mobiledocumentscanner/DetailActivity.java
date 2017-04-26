@@ -3,7 +3,7 @@ package com.untitled.mobiledocumentscanner;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
@@ -43,13 +43,14 @@ public class DetailActivity extends AppCompatActivity{
     ArrayList<String[]> currentTags;
     JSONParser jParser = new JSONParser();
     TagAdapter tagAdapter;
+    private String ip;
 
-    private static String urlTags = "http://10.0.2.2/DocumentScanner/find_tags.php";
-    private static String urlTag = "http://10.0.2.2/DocumentScanner/find_tag.php";
-    private static String urlCreateTag = "http://10.0.2.2/DocumentScanner/create_tag.php";
-    private static String urlApplyTag = "http://10.0.2.2/DocumentScanner/apply_tag.php";
-    private static String urlPages = "http://10.0.2.2/DocumentScanner/retrieve_pages.php";
-    private static String urlAllTags = "http://10.0.2.2/DocumentScanner/find_all_tags.php";
+    private String urlTags;
+    private String urlTag;
+    private String urlCreateTag;
+    private String urlApplyTag;
+    private String urlPages;
+    private String urlAllTags;
 
     private static final String DATA_PATH = Environment.getExternalStorageDirectory().toString() + "/TesseractSample/";
     private static final String TESSDATA = "tessdata";
@@ -61,12 +62,20 @@ public class DetailActivity extends AppCompatActivity{
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_detail);
 
+        Bundle bundle = getIntent().getExtras();
+        this.doc = (Document) bundle.get("document");
+        ip = bundle.getString("ip");
+
+        urlTags = "http://" + ip + "/DocumentScanner/find_tags.php";
+        urlTag = "http://" + ip + "/DocumentScanner/find_tag.php";
+        urlCreateTag = "http://" + ip + "/DocumentScanner/create_tag.php";
+        urlApplyTag = "http://" + ip + "/DocumentScanner/apply_tag.php";
+        urlPages = "http://" + ip + "/DocumentScanner/retrieve_pages.php";
+        urlAllTags = "http://" + ip + "/DocumentScanner/find_all_tags.php";
+
         if (Build.VERSION.SDK_INT >= 23) {
             requestPermission();
         }
-
-        Bundle bundle = getIntent().getExtras();
-        this.doc = (Document)bundle.get("document");
 
         TextView viewTitle = (TextView)findViewById(R.id.imageName);
         viewTitle.setText(doc.getTitle());
@@ -175,9 +184,10 @@ public class DetailActivity extends AppCompatActivity{
         new addTag().execute(tag);
     }
 
-    public static void start(Context context, Document document) {
+    public static void start(Context context, Document document, String ip) {
         Intent intent = new Intent(context, DetailActivity.class);
         intent.putExtra("document", document);
+        intent.putExtra("ip", ip);
 
         context.startActivity(intent);
     }
@@ -333,7 +343,7 @@ public class DetailActivity extends AppCompatActivity{
                     for (int i = 0; i < pageJson.length(); i++) {
                         JSONObject pageObject = pageJson.getJSONObject(i);
                         int id = pageObject.getInt("imageID");
-                        Bitmap image = BitmapUtil.getImage(Base64.decode(pageObject.getString("image"), Base64.DEFAULT));
+                        byte[] image = (Base64.decode(pageObject.getString("image"), Base64.DEFAULT));
                         String encryptionKey = pageObject.getString("encryptionKey");
                         int pageNo = i + 1;
 
@@ -352,7 +362,10 @@ public class DetailActivity extends AppCompatActivity{
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    ViewPagerAdapter viewAdapter = new ViewPagerAdapter(getApplicationContext(), pages, false, doc.getID());
+                    if (pages.size() < 1) {
+                        pages.add(new Page(-1, BitmapUtil.getBytes(BitmapFactory.decodeResource(getResources(), R.drawable.imageadd)), "", 1));
+                    }
+                    ViewPagerAdapter viewAdapter = new ViewPagerAdapter(getApplicationContext(), pages, false, doc.getID(), ip);
                     ViewPager viewPager = (ViewPager) findViewById(R.id.imagePreview);
                     viewPager.setAdapter(viewAdapter);
                 }
@@ -399,7 +412,7 @@ public class DetailActivity extends AppCompatActivity{
         protected void onPostExecute(String fileURL) {
             runOnUiThread(new Runnable() {
                 public void run() {
-                    tagAdapter = new TagAdapter(currentTags, doc.getID(), getApplicationContext());
+                    tagAdapter = new TagAdapter(currentTags, doc.getID(), getApplicationContext(), ip);
                     ListView listView = (ListView) findViewById(R.id.tagsView);
                     listView.setAdapter(tagAdapter);
                 }

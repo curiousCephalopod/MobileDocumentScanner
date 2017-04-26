@@ -5,16 +5,6 @@
  */
 package com.untitled.mobiledocumentscanner;
 
-import android.os.Build;
-import android.support.annotation.RequiresApi;
-
-import java.io.InputStream;
-import java.math.BigInteger;
-import java.security.SecureRandom;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-
 ;
 
 /**
@@ -22,7 +12,7 @@ import java.sql.SQLException;
  * @author Ed
  */
 public class newUserGen {
-    
+    /*
     InputStream stream = newUserGen.class.getResourceAsStream("/database.properties");
     
     String newUser = "INSERT INTO Login VALUES (?,?,?,?)";
@@ -54,5 +44,6 @@ public class newUserGen {
             System.out.println("SQL error(new user)");
         }
     }
+    */
 }
 

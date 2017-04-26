@@ -1,6 +1,7 @@
 package com.untitled.mobiledocumentscanner;
 
-import android.graphics.Bitmap;
+import android.content.Context;
+import android.content.Intent;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -23,23 +24,45 @@ public class GalleryActivity extends AppCompatActivity {
     private int userID = 1;
     JSONParser jParser = new JSONParser();
 
-    private static String urlDocuments = "http://10.0.2.2/DocumentScanner/retrieve_documents.php";
-    private static String urlCover = "http://10.0.2.2/DocumentScanner/retrieve_cover.php";
+    private String urlDocuments;
+    private String urlCover;
+
+    private String ip;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_gallery);
 
-        documents = new ArrayList<>();
+        Bundle bundle = getIntent().getExtras();
+        ip = bundle.getString("ip");
+
+        urlDocuments = "http://" + ip + "/DocumentScanner/retrieve_documents.php";
+        urlCover = "http://" + ip + "/DocumentScanner/retrieve_cover.php";
 
         new retrieveImages().execute();
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        new retrieveImages().execute();
+    }
+
+    public static void start(Context context, String ip) {
+        Intent intent = new Intent(context, GalleryActivity.class);
+        intent.putExtra("ip", ip);
+
+        context.startActivity(intent);
+    }
+
     class retrieveImages extends AsyncTask<String, String, String> {
+        ArrayList<Document> temp;
 
         @Override
         protected String doInBackground(String... args) {
+            temp = new ArrayList<>();
             // Building Parameters
             List<NameValuePair> docParams = new ArrayList<NameValuePair>();
             docParams.add(new BasicNameValuePair("userID", userID + ""));
@@ -62,7 +85,7 @@ public class GalleryActivity extends AppCompatActivity {
                         String date = docObject.getString("dateCreated");
                         int pages = docObject.getInt("noPages");
 
-                        Bitmap cover;
+                        byte[] cover;
                         // Retrieve cover
                         List<NameValuePair> coverParams = new ArrayList<NameValuePair>();
                         coverParams.add(new BasicNameValuePair("docID", id + ""));
@@ -72,15 +95,14 @@ public class GalleryActivity extends AppCompatActivity {
                         // Check for Success
                         int coverSuccess = coverJson.getInt("success");
                         if (coverSuccess == 1) {
-
-                            cover = BitmapUtil.getImage(Base64.decode(coverJson.getString("image"), Base64.DEFAULT));
+                            cover = Base64.decode(coverJson.getString("image"), Base64.DEFAULT);
                         } else {
-                            cover = BitmapFactory.decodeResource(getResources(), R.drawable.imagepreview);
+                            cover = BitmapUtil.getBytes(BitmapFactory.decodeResource(getResources(), R.drawable.imagepreview));
                         }
 
                         // Create and add document
                         Document doc = new Document(id, title, date, pages, cover);
-                        documents.add(doc);
+                        temp.add(doc);
                     }
                 }
             } catch (JSONException e) {
@@ -93,13 +115,16 @@ public class GalleryActivity extends AppCompatActivity {
         protected void onPostExecute(String fileURL) {
             runOnUiThread(new Runnable() {
                 public void run() {
+                    temp.add(new Document(-1, "New Doc", "", 0, BitmapUtil.getBytes(BitmapFactory.decodeResource(getResources(), R.drawable.imageadd))));
+                    documents = temp;
+
                     RecyclerView recyclerView = (RecyclerView) findViewById(R.id.imagegallery);
                     recyclerView.setHasFixedSize(true);
 
                     RecyclerView.LayoutManager layoutManager = new GridLayoutManager(getApplicationContext(), 2);
                     recyclerView.setLayoutManager(layoutManager);
 
-                    GalleryAdapter adapter = new GalleryAdapter(getApplicationContext(), documents);
+                    GalleryAdapter adapter = new GalleryAdapter(GalleryActivity.this, userID + "", documents, ip);
                     recyclerView.setAdapter(adapter);
                 }
             });

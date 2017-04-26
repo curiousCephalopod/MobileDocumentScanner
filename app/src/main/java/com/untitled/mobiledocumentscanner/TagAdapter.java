@@ -30,13 +30,16 @@ public class TagAdapter extends BaseAdapter implements ListAdapter {
     private int docID;
     private Context context;
     JSONParser jParser = new JSONParser();
+    String ip;
 
-    private static String urlTags = "http://10.0.2.2/DocumentScanner/remove_tag.php";
+    private String urlTags;
 
-    public TagAdapter(ArrayList<String[]> tags, int docID, Context context) {
+    public TagAdapter(ArrayList<String[]> tags, int docID, Context context, String ip) {
         this.tags = tags;
         this.docID = docID;
         this.context = context;
+        this.ip = ip;
+        urlTags = "http://" + ip + "/DocumentScanner/remove_tag.php";
     }
 
     @Override
