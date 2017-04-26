@@ -2,16 +2,26 @@ package com.untitled.mobiledocumentscanner;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
+import android.support.annotation.RequiresApi;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Base64;
+import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import com.googlecode.tesseract.android.TessBaseAPI;
 
 import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
@@ -19,13 +29,18 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
 public class DetailActivity extends AppCompatActivity{
     private Document doc;
     ArrayList<Page> pages;
-    ArrayList<String[]> tags;
+    ArrayList<String[]> currentTags;
     JSONParser jParser = new JSONParser();
     TagAdapter tagAdapter;
 
@@ -34,11 +49,21 @@ public class DetailActivity extends AppCompatActivity{
     private static String urlCreateTag = "http://10.0.2.2/DocumentScanner/create_tag.php";
     private static String urlApplyTag = "http://10.0.2.2/DocumentScanner/apply_tag.php";
     private static String urlPages = "http://10.0.2.2/DocumentScanner/retrieve_pages.php";
+    private static String urlAllTags = "http://10.0.2.2/DocumentScanner/find_all_tags.php";
 
+    private static final String DATA_PATH = Environment.getExternalStorageDirectory().toString() + "/TesseractSample/";
+    private static final String TESSDATA = "tessdata";
+    private static final int PERMISSION_REQUEST_CODE = 1;
+
+    @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_detail);
+
+        if (Build.VERSION.SDK_INT >= 23) {
+            requestPermission();
+        }
 
         Bundle bundle = getIntent().getExtras();
         this.doc = (Document)bundle.get("document");
@@ -52,9 +77,8 @@ public class DetailActivity extends AppCompatActivity{
         TextView viewPages = (TextView)findViewById(R.id.imagePages);
         viewPages.setText(doc.getPages() + " pages");
 
-        tags = new ArrayList<>();
+        currentTags = new ArrayList<>();
         new retrieveTags().execute();
-
         new retrievePages().execute();
     }
 
@@ -65,9 +89,89 @@ public class DetailActivity extends AppCompatActivity{
         new retrievePages().execute();
     }
 
+    private boolean checkPermission() {
+        int result = ContextCompat.checkSelfPermission(DetailActivity.this, android.Manifest.permission.WRITE_EXTERNAL_STORAGE);
+        if (result == PackageManager.PERMISSION_GRANTED) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    private void requestPermission() {
+
+        if (ActivityCompat.shouldShowRequestPermissionRationale(DetailActivity.this, android.Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+            Toast.makeText(DetailActivity.this, "Write External Storage permission allows us to do store images. Please allow this permission in App Settings.", Toast.LENGTH_LONG).show();
+        } else {
+            ActivityCompat.requestPermissions(DetailActivity.this, new String[]{android.Manifest.permission.WRITE_EXTERNAL_STORAGE}, PERMISSION_REQUEST_CODE);
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
+        switch (requestCode) {
+            case PERMISSION_REQUEST_CODE:
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    Log.e("value", "Permission Granted, Now you can use local drive .");
+                } else {
+                    Log.e("value", "Permission Denied, You cannot use local drive .");
+                }
+                break;
+        }
+    }
+
+    private void prepareTesseract() {
+        File dir = new File(DATA_PATH + TESSDATA);
+        if (!dir.exists()) {
+            if (!dir.mkdirs()) {
+                Log.e("INFO", "ERROR: Creation of directory " + DATA_PATH + TESSDATA + " failed, check does Android Manifest have permission to write to external storage.");
+            }
+        } else {
+            Log.i("INFO", "Created directory " + DATA_PATH + TESSDATA);
+        }
+
+        try {
+            String fileList[] = getAssets().list(TESSDATA);
+
+            for (String fileName : fileList) {
+                String pathToDataFile = DATA_PATH + TESSDATA + "/" + fileName;
+                if (!(new File(pathToDataFile)).exists()) {
+                    InputStream in = getAssets().open(TESSDATA + "/" + fileName);
+                    OutputStream out = new FileOutputStream(pathToDataFile);
+
+                    // Transfer
+                    byte[] buffer = new byte[1024];
+                    int length;
+
+                    while ((length = in.read(buffer)) > 0) {
+                        out.write(buffer, 0, length);
+                    }
+                    in.close();
+                    out.close();
+
+                    Log.d("INFO", "Copied " + fileName + " to tessdata");
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void scanTags(View v) {
+        if (checkPermission()) {
+            prepareTesseract();
+
+            new scanTags().execute();
+        }
+    }
+
     public void addTag(View v) {
         EditText newTag = (EditText) findViewById(R.id.newTag);
         String tag = newTag.getText().toString().toLowerCase();
+        applyTag(tag);
+    }
+
+    private void applyTag(String tag) {
         new addTag().execute(tag);
     }
 
@@ -76,6 +180,67 @@ public class DetailActivity extends AppCompatActivity{
         intent.putExtra("document", document);
 
         context.startActivity(intent);
+    }
+
+    class scanTags extends AsyncTask<String, String, String> {
+
+        @Override
+        protected String doInBackground(String... params) {
+            TessBaseAPI tessBaseAPI = new TessBaseAPI();
+            tessBaseAPI.init(DATA_PATH, "eng");
+
+            String totalResult = "";
+            for (Page page : pages) {
+                tessBaseAPI.setImage(page.getImage());
+                totalResult += "\n" + tessBaseAPI.getUTF8Text();
+            }
+            tessBaseAPI.end();
+            totalResult = totalResult.toLowerCase();
+
+            Log.d("INFO", totalResult);
+
+            // Build params
+            List<NameValuePair> tagParams = new ArrayList<NameValuePair>();
+            // Retrieve JSON
+            JSONObject tagsJson = jParser.makeHttpRequest(urlAllTags, "POST", tagParams);
+
+            try {
+                // Check for success
+                int tagSuccess = tagsJson.getInt("success");
+
+                if (tagSuccess == 1) {
+                    JSONArray tagJson = tagsJson.getJSONArray("tags");
+
+                    ArrayList<String[]> allTags = new ArrayList<>();
+                    // Loop
+                    for (int i = 0; i < tagJson.length(); i++) {
+                        JSONObject pageObject = tagJson.getJSONObject(i);
+                        String[] tag = new String[2];
+                        tag[0] = pageObject.getString("tagID");
+                        tag[1] = pageObject.getString("tag");
+
+                        allTags.add(tag);
+                    }
+
+                    ArrayList<String[]> foundTags = new ArrayList<>();
+                    // Search for tags
+                    for (String[] tag : allTags) {
+                        if (totalResult.contains(tag[1])) {
+                            foundTags.add(tag);
+                        }
+                    }
+
+                    for (String[] tag : foundTags) {
+                        Log.d("INFO", "Tag: " + tag[1] + " added.");
+                        applyTag(tag[1]);
+                    }
+                }
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+
+            return null;
+        }
     }
 
     class addTag extends AsyncTask<String, String, String> {
@@ -129,7 +294,7 @@ public class DetailActivity extends AppCompatActivity{
 
                 if (applyTagSuccess == 1) {
                     // Tag applied
-                    tags.add(tag);
+                    currentTags.add(tag);
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
@@ -205,6 +370,7 @@ public class DetailActivity extends AppCompatActivity{
             // Retrieve JSON
             JSONObject tagsJson = jParser.makeHttpRequest(urlTags, "POST", tagsParams);
 
+            Log.d("INFO", tagsJson.toString());
             try {
                 // Check for Success
                 int tagsSuccess = tagsJson.getInt("success");
@@ -220,7 +386,7 @@ public class DetailActivity extends AppCompatActivity{
                         tag[0] = tagObject.getString("tagID");
                         tag[1] = tagObject.getString("tag");
 
-                        tags.add(tag);
+                        currentTags.add(tag);
                     }
                 }
             } catch (JSONException e) {
@@ -233,7 +399,7 @@ public class DetailActivity extends AppCompatActivity{
         protected void onPostExecute(String fileURL) {
             runOnUiThread(new Runnable() {
                 public void run() {
-                    tagAdapter = new TagAdapter(tags, doc.getID(), getApplicationContext());
+                    tagAdapter = new TagAdapter(currentTags, doc.getID(), getApplicationContext());
                     ListView listView = (ListView) findViewById(R.id.tagsView);
                     listView.setAdapter(tagAdapter);
                 }
