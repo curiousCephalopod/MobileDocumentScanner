@@ -66,6 +66,8 @@ public class DetailActivity extends AppCompatActivity{
         this.doc = (Document) bundle.get("document");
         ip = bundle.getString("ip");
 
+        Log.d("TEST", "Detail: " + ip);
+
         urlTags = "http://" + ip + "/DocumentScanner/find_tags.php";
         urlTag = "http://" + ip + "/DocumentScanner/find_tag.php";
         urlCreateTag = "http://" + ip + "/DocumentScanner/create_tag.php";
@@ -343,7 +345,7 @@ public class DetailActivity extends AppCompatActivity{
                     for (int i = 0; i < pageJson.length(); i++) {
                         JSONObject pageObject = pageJson.getJSONObject(i);
                         int id = pageObject.getInt("imageID");
-                        byte[] image = (Base64.decode(pageObject.getString("image"), Base64.DEFAULT));
+                        byte[] image = Base64.decode(pageObject.getString("image"), Base64.DEFAULT);
                         String encryptionKey = pageObject.getString("encryptionKey");
                         int pageNo = i + 1;
 

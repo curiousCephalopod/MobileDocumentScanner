@@ -35,7 +35,8 @@ public class GalleryActivity extends AppCompatActivity {
         setContentView(R.layout.activity_gallery);
 
         Bundle bundle = getIntent().getExtras();
-        ip = bundle.getString("ip");
+        //ip = bundle.getString("ip");
+        ip = "cyrvpebhob.localtunnel.me";
 
         urlDocuments = "http://" + ip + "/DocumentScanner/retrieve_documents.php";
         urlCover = "http://" + ip + "/DocumentScanner/retrieve_cover.php";

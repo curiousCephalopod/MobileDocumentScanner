@@ -29,6 +29,10 @@ public class Page implements Serializable {
         return BitmapUtil.getImage(image);
     }
 
+    public byte[] getPlainImage() {
+        return image;
+    }
+
     public String getEncryptionKey() {
         return encryptionKey;
     }

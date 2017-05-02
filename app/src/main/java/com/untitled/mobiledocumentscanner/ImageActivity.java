@@ -38,6 +38,7 @@ public class ImageActivity extends AppCompatActivity {
         this.docID = bundle.getInt("docID");
         this.ip = bundle.getString("ip");
 
+        Log.d("TEST", "Image: " + ip);
         urlRemovePage = "http://" + ip + "/DocumentScanner/remove_page.php";
 
 
@@ -59,6 +60,7 @@ public class ImageActivity extends AppCompatActivity {
         intent.putExtra("pages", pages);
         intent.putExtra("docID", docID);
         intent.putExtra("ip", ip);
+        Log.d("TEST", "image start: " + ip);
 
         context.startActivity(intent);
     }

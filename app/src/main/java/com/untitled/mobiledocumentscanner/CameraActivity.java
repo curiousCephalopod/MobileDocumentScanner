@@ -5,6 +5,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.hardware.Camera;
 import android.hardware.Camera.PictureCallback;
 import android.os.AsyncTask;
@@ -50,6 +52,7 @@ public class CameraActivity extends AppCompatActivity {
         pageNo = bundle.getString("pageNo");
         ip = bundle.getString("ip");
 
+        Log.d("TEST", ip);
         urlCreatePage = "http://" + ip + "/DocumentScanner/create_page.php";
 
         if (Build.VERSION.SDK_INT >= 23) {
@@ -90,18 +93,21 @@ public class CameraActivity extends AppCompatActivity {
                     cameraPreviewLayout = (FrameLayout) findViewById(R.id.cameraPreview);
 
                     camera = Camera.open();
+                    camera.setDisplayOrientation(90);
                     imageSurfaceView = new ImageSurfaceView(CameraActivity.this, camera);
                     cameraPreviewLayout.addView(imageSurfaceView);
 
                     final PictureCallback pictureCallback = new PictureCallback() {
                         @Override
                         public void onPictureTaken(byte[] data, Camera camera) {
+                            Bitmap image = BitmapFactory.decodeByteArray(data, 0, data.length);
                             if (data == null) {
                                 Log.d("INFO", "Captured image is empty.");
                                 return;
                             }
 
-                            new addPage().execute(Base64.encodeToString(data, Base64.DEFAULT));
+                            Log.d("TEST", Base64.encodeToString(BitmapUtil.getBytes(image), Base64.DEFAULT));
+                            new addPage().execute(Base64.encodeToString(BitmapUtil.getBytes(image), Base64.DEFAULT));
                             finish();
                         }
                     };

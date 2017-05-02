@@ -17,9 +17,9 @@ public class ViewPagerAdapter extends PagerAdapter{
     private ArrayList<Page> pages;
     private boolean fullscreen;
     private int docID;
-    String ip;
+    private String ip;
 
-    public ViewPagerAdapter(Context context, ArrayList<Page> pages, Boolean fullscreen, int docID, String id) {
+    public ViewPagerAdapter(Context context, ArrayList<Page> pages, Boolean fullscreen, int docID, String ip) {
         this.context = context;
         this.pages = pages;
         this.fullscreen = fullscreen;
