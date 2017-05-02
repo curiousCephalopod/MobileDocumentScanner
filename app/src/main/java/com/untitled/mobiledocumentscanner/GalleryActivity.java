@@ -20,14 +20,20 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class GalleryActivity extends AppCompatActivity {
+    JSONParser jParser = new JSONParser();
     private ArrayList<Document> documents;
     private int userID = 1;
-    JSONParser jParser = new JSONParser();
-
     private String urlDocuments;
     private String urlCover;
 
     private String ip;
+
+    public static void start(Context context, String ip) {
+        Intent intent = new Intent(context, GalleryActivity.class);
+        intent.putExtra("ip", ip);
+
+        context.startActivity(intent);
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -35,8 +41,8 @@ public class GalleryActivity extends AppCompatActivity {
         setContentView(R.layout.activity_gallery);
 
         Bundle bundle = getIntent().getExtras();
-        //ip = bundle.getString("ip");
-        ip = "cyrvpebhob.localtunnel.me";
+        ip = bundle.getString("ip");
+        //ip = "hwbqmnqoxs.localtunnel.me";
 
         urlDocuments = "http://" + ip + "/DocumentScanner/retrieve_documents.php";
         urlCover = "http://" + ip + "/DocumentScanner/retrieve_cover.php";
@@ -49,13 +55,6 @@ public class GalleryActivity extends AppCompatActivity {
         super.onResume();
 
         new retrieveImages().execute();
-    }
-
-    public static void start(Context context, String ip) {
-        Intent intent = new Intent(context, GalleryActivity.class);
-        intent.putExtra("ip", ip);
-
-        context.startActivity(intent);
     }
 
     class retrieveImages extends AsyncTask<String, String, String> {
