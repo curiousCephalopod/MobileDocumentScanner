@@ -8,7 +8,6 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
-import android.support.annotation.RequiresApi;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.view.ViewPager;
@@ -37,14 +36,28 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Class designed and implemented by Joshua (eeu67d).
+ * Displays the details of a single document, and allows modification.
+ */
 public class DetailActivity extends AppCompatActivity{
+    // Tesseract API parameters
+    private static final String DATA_PATH = Environment.getExternalStorageDirectory().toString() + "/TesseractSample/";
+    private static final String TESSDATA = "tessdata";
+    private static final int PERMISSION_REQUEST_CODE = 1;
+    // Structure to hold the document
     private Document doc;
-    ArrayList<Page> pages;
-    ArrayList<String[]> currentTags;
-    JSONParser jParser = new JSONParser();
-    TagAdapter tagAdapter;
+    // List of pages in the document
+    private ArrayList<Page> pages;
+    // List of tags in the document
+    private ArrayList<String[]> currentTags;
+    // Parser object to read JSON response
+    private JSONParser jParser;
+    // Tag adapter to control tag display
+    private TagAdapter tagAdapter;
+    // IP address of the server
     private String ip;
-
+    // URLs to access PHP scripts
     private String urlTags;
     private String urlTag;
     private String urlCreateTag;
@@ -52,22 +65,40 @@ public class DetailActivity extends AppCompatActivity{
     private String urlPages;
     private String urlAllTags;
 
-    private static final String DATA_PATH = Environment.getExternalStorageDirectory().toString() + "/TesseractSample/";
-    private static final String TESSDATA = "tessdata";
-    private static final int PERMISSION_REQUEST_CODE = 1;
+    /**
+     * Start the activity and retrieve parameters
+     *
+     * @param context  Application context
+     * @param document Document to view
+     * @param ip       Server address
+     */
+    public static void start(Context context, Document document, String ip) {
+        // Set up an intent and pass the variables
+        Intent intent = new Intent(context, DetailActivity.class);
+        intent.putExtra("document", document);
+        intent.putExtra("ip", ip);
 
-    @RequiresApi(api = Build.VERSION_CODES.M)
+        // Start the activity
+        context.startActivity(intent);
+    }
+
+    /**
+     * Initialise parameters from the bundle and set up views.
+     * @param savedInstanceState
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_detail);
 
+        // Initialise the parser
+        jParser = new JSONParser();
+        // Retrieve variables from the stored bundle
         Bundle bundle = getIntent().getExtras();
         this.doc = (Document) bundle.get("document");
         ip = bundle.getString("ip");
 
-        Log.d("TEST", "Detail: " + ip);
-
+        // Initialise the PHP URLs
         urlTags = "http://" + ip + "/DocumentScanner/find_tags.php";
         urlTag = "http://" + ip + "/DocumentScanner/find_tag.php";
         urlCreateTag = "http://" + ip + "/DocumentScanner/create_tag.php";
@@ -75,24 +106,33 @@ public class DetailActivity extends AppCompatActivity{
         urlPages = "http://" + ip + "/DocumentScanner/retrieve_pages.php";
         urlAllTags = "http://" + ip + "/DocumentScanner/find_all_tags.php";
 
+        // Request permission to access storage
         if (Build.VERSION.SDK_INT >= 23) {
             requestPermission();
         }
 
+        // Display the document title
         TextView viewTitle = (TextView)findViewById(R.id.imageName);
         viewTitle.setText(doc.getTitle());
 
+        // Display the date of creation
         TextView viewDate = (TextView)findViewById(R.id.imageDate);
         viewDate.setText(doc.getDate());
 
+        // Display the number of pages
         TextView viewPages = (TextView)findViewById(R.id.imagePages);
         viewPages.setText(doc.getPages() + " pages");
 
+        // Retrieve the document tags
         currentTags = new ArrayList<>();
         new retrieveTags().execute();
+        // Retrieve the document page
         new retrievePages().execute();
     }
 
+    /**
+     * If the activity is resumed, update the pages
+     */
     @Override
     public void onResume() {
         super.onResume();
@@ -100,7 +140,12 @@ public class DetailActivity extends AppCompatActivity{
         new retrievePages().execute();
     }
 
+    /**
+     * Check if we have permission to access the storage.
+     * @return
+     */
     private boolean checkPermission() {
+        // Check for write permissions
         int result = ContextCompat.checkSelfPermission(DetailActivity.this, android.Manifest.permission.WRITE_EXTERNAL_STORAGE);
         if (result == PackageManager.PERMISSION_GRANTED) {
             return true;
@@ -109,8 +154,11 @@ public class DetailActivity extends AppCompatActivity{
         }
     }
 
+    /**
+     * Request permission to write to the storage.
+     */
     private void requestPermission() {
-
+        // Request permissions
         if (ActivityCompat.shouldShowRequestPermissionRationale(DetailActivity.this, android.Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
             Toast.makeText(DetailActivity.this, "Write External Storage permission allows us to do store images. Please allow this permission in App Settings.", Toast.LENGTH_LONG).show();
         } else {
@@ -118,8 +166,15 @@ public class DetailActivity extends AppCompatActivity{
         }
     }
 
+    /**
+     * Callback for the permission request.
+     * @param requestCode
+     * @param permissions
+     * @param grantResults
+     */
     @Override
     public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
+        // Check for permissions
         switch (requestCode) {
             case PERMISSION_REQUEST_CODE:
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
@@ -131,7 +186,11 @@ public class DetailActivity extends AppCompatActivity{
         }
     }
 
+    /**
+     * Prepare the tesseract file storage.
+     */
     private void prepareTesseract() {
+        // Create a new directory if it doesn't exist already
         File dir = new File(DATA_PATH + TESSDATA);
         if (!dir.exists()) {
             if (!dir.mkdirs()) {
@@ -142,15 +201,17 @@ public class DetailActivity extends AppCompatActivity{
         }
 
         try {
+            // Retrieve the tesseract assets
             String fileList[] = getAssets().list(TESSDATA);
 
+            // For each asset
             for (String fileName : fileList) {
                 String pathToDataFile = DATA_PATH + TESSDATA + "/" + fileName;
                 if (!(new File(pathToDataFile)).exists()) {
                     InputStream in = getAssets().open(TESSDATA + "/" + fileName);
                     OutputStream out = new FileOutputStream(pathToDataFile);
 
-                    // Transfer
+                    // Transfer it to the storage
                     byte[] buffer = new byte[1024];
                     int length;
 
@@ -168,48 +229,66 @@ public class DetailActivity extends AppCompatActivity{
         }
     }
 
+    /**
+     * Prepare tesseract and scan for tags.
+     * @param v
+     */
     public void scanTags(View v) {
         if (checkPermission()) {
+            // Prepare the file storage
             prepareTesseract();
 
+            // Scan for tags
             new scanTags().execute();
         }
     }
 
+    /**
+     * Callback for add tag button.
+     * @param v
+     */
     public void addTag(View v) {
+        // Retrieve the edit text
         EditText newTag = (EditText) findViewById(R.id.newTag);
+        // Lowercase the input
         String tag = newTag.getText().toString().toLowerCase();
+        // Add it to the tag list
         applyTag(tag);
     }
 
+    /**
+     * Executes an ASyncTask to add a tag.
+     * @param tag
+     */
     private void applyTag(String tag) {
         new addTag().execute(tag);
     }
 
-    public static void start(Context context, Document document, String ip) {
-        Intent intent = new Intent(context, DetailActivity.class);
-        intent.putExtra("document", document);
-        intent.putExtra("ip", ip);
-
-        context.startActivity(intent);
-    }
-
+    /**
+     * ASyncTask to scan for tags and add them.
+     */
     class scanTags extends AsyncTask<String, String, String> {
 
+        /**
+         * Perform the scan in the background.
+         * @param params
+         * @return
+         */
         @Override
         protected String doInBackground(String... params) {
+            // Initialise the Tesseract API
             TessBaseAPI tessBaseAPI = new TessBaseAPI();
             tessBaseAPI.init(DATA_PATH, "eng");
 
+            // Scan the pages for text
             String totalResult = "";
             for (Page page : pages) {
                 tessBaseAPI.setImage(page.getImage());
                 totalResult += "\n" + tessBaseAPI.getUTF8Text();
             }
             tessBaseAPI.end();
+            // Convert the text to lowercase
             totalResult = totalResult.toLowerCase();
-
-            Log.d("INFO", totalResult);
 
             // Build params
             List<NameValuePair> tagParams = new ArrayList<NameValuePair>();
@@ -224,24 +303,28 @@ public class DetailActivity extends AppCompatActivity{
                     JSONArray tagJson = tagsJson.getJSONArray("tags");
 
                     ArrayList<String[]> allTags = new ArrayList<>();
-                    // Loop
+                    // Loop for each tag
                     for (int i = 0; i < tagJson.length(); i++) {
+                        // Retrieve the tag properties
                         JSONObject pageObject = tagJson.getJSONObject(i);
                         String[] tag = new String[2];
                         tag[0] = pageObject.getString("tagID");
                         tag[1] = pageObject.getString("tag");
 
+                        // Add the tag
                         allTags.add(tag);
                     }
 
                     ArrayList<String[]> foundTags = new ArrayList<>();
                     // Search for tags
                     for (String[] tag : allTags) {
+                        // If the tag is found, add it
                         if (totalResult.contains(tag[1])) {
                             foundTags.add(tag);
                         }
                     }
 
+                    // Apply all found tags
                     for (String[] tag : foundTags) {
                         Log.d("INFO", "Tag: " + tag[1] + " added.");
                         applyTag(tag[1]);
@@ -255,8 +338,16 @@ public class DetailActivity extends AppCompatActivity{
         }
     }
 
+    /**
+     * ASyncTask to add a new tag off the main thread.
+     */
     class addTag extends AsyncTask<String, String, String> {
 
+        /**
+         * Do the task in the background.
+         * @param params
+         * @return
+         */
         @Override
         protected String doInBackground(String... params) {
             // Build params
@@ -323,10 +414,19 @@ public class DetailActivity extends AppCompatActivity{
         }
     }
 
+    /**
+     * ASyncTask to retrieve the pages off the main thread.
+     */
     class retrievePages extends AsyncTask<String, String, String> {
 
+        /**
+         * Do the task in the background.
+         * @param params
+         * @return
+         */
         @Override
         protected String doInBackground(String... params) {
+            // Reset the pages
             pages = new ArrayList<>();
             // Build params
             List<NameValuePair> pageParams = new ArrayList<NameValuePair>();
@@ -341,14 +441,16 @@ public class DetailActivity extends AppCompatActivity{
                 if (pagesSuccess == 1) {
                     JSONArray pageJson = pagesJson.getJSONArray("pages");
 
-                    // Loop
+                    // Loop for each page
                     for (int i = 0; i < pageJson.length(); i++) {
                         JSONObject pageObject = pageJson.getJSONObject(i);
+                        // Retrieve the page properties
                         int id = pageObject.getInt("imageID");
                         byte[] image = Base64.decode(pageObject.getString("image"), Base64.DEFAULT);
                         String encryptionKey = pageObject.getString("encryptionKey");
                         int pageNo = i + 1;
 
+                        // Create and add the page
                         Page page = new Page(id, image, encryptionKey, pageNo);
                         pages.add(page);
                     }
@@ -360,13 +462,19 @@ public class DetailActivity extends AppCompatActivity{
             return null;
         }
 
+        /**
+         * After execution, set up the view.
+         * @param fileURL
+         */
         protected void onPostExecute(String fileURL) {
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
+                    // If there is no pages, add a placeholder
                     if (pages.size() < 1) {
                         pages.add(new Page(-1, BitmapUtil.getBytes(BitmapFactory.decodeResource(getResources(), R.drawable.imageadd)), "", 1));
                     }
+                    // Add the adapter to the view
                     ViewPagerAdapter viewAdapter = new ViewPagerAdapter(getApplicationContext(), pages, false, doc.getID(), ip);
                     ViewPager viewPager = (ViewPager) findViewById(R.id.imagePreview);
                     viewPager.setAdapter(viewAdapter);
@@ -375,8 +483,16 @@ public class DetailActivity extends AppCompatActivity{
         }
     }
 
+    /**
+     * Retrieve tags of a document.
+     */
     class retrieveTags extends AsyncTask<String, String, String> {
 
+        /**
+         * Do the task in the background
+         * @param args
+         * @return
+         */
         @Override
         protected String doInBackground(String... args) {
             // Building Parameters
@@ -385,7 +501,6 @@ public class DetailActivity extends AppCompatActivity{
             // Retrieve JSON
             JSONObject tagsJson = jParser.makeHttpRequest(urlTags, "POST", tagsParams);
 
-            Log.d("INFO", tagsJson.toString());
             try {
                 // Check for Success
                 int tagsSuccess = tagsJson.getInt("success");
@@ -398,6 +513,7 @@ public class DetailActivity extends AppCompatActivity{
                         JSONObject tagObject = tagJson.getJSONObject(i);
                         String[] tag = new String[2];
 
+                        // Store the tag details
                         tag[0] = tagObject.getString("tagID");
                         tag[1] = tagObject.getString("tag");
 
@@ -411,9 +527,14 @@ public class DetailActivity extends AppCompatActivity{
             return null;
         }
 
+        /**
+         * After Execution, set up the tag adapter
+         * @param fileURL
+         */
         protected void onPostExecute(String fileURL) {
             runOnUiThread(new Runnable() {
                 public void run() {
+                    // Initialise the tag adapter
                     tagAdapter = new TagAdapter(currentTags, doc.getID(), getApplicationContext(), ip);
                     ListView listView = (ListView) findViewById(R.id.tagsView);
                     listView.setAdapter(tagAdapter);

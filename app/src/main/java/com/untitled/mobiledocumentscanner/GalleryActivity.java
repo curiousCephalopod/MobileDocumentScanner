@@ -19,10 +19,18 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Class designed and implemented by Joshua (eeu67d).
+ * Retrieves and displays all documents.
+ */
 public class GalleryActivity extends AppCompatActivity {
-    JSONParser jParser = new JSONParser();
+    // Parser to read JSON
+    private JSONParser jParser;
+    // List of retrieved documents
     private ArrayList<Document> documents;
+    // Default user ID, in leu of login
     private int userID = 1;
+    // URLs
     private String urlDocuments;
     private String urlCover;
 
@@ -40,9 +48,11 @@ public class GalleryActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_gallery);
 
+        jParser = new JSONParser();
+
         Bundle bundle = getIntent().getExtras();
-        ip = bundle.getString("ip");
-        //ip = "hwbqmnqoxs.localtunnel.me";
+        //ip = bundle.getString("ip");
+        ip = "lrhvbzvdud.localtunnel.me";
 
         urlDocuments = "http://" + ip + "/DocumentScanner/retrieve_documents.php";
         urlCover = "http://" + ip + "/DocumentScanner/retrieve_cover.php";
