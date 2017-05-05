@@ -37,6 +37,7 @@ import java.util.List;
 import static android.Manifest.permission.READ_CONTACTS;
 
 /**
+ * Class designed and implemented by Amber (eeu68b).
  * A login screen that offers login via email/password.
  */
 public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<Cursor> {

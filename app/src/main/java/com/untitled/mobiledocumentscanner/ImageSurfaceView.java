@@ -8,13 +8,21 @@ import android.view.SurfaceView;
 import java.io.IOException;
 
 /**
- * Created by J on 26-Apr-17.
+ * Class designed by Amber (eeu68b) and implemented by Joshua (eeu67d).
+ * View for a camera preview.
  */
 
 public class ImageSurfaceView extends SurfaceView implements SurfaceHolder.Callback {
+    // A camera object
     private Camera camera;
+    // Preview holder
     private SurfaceHolder surfaceHolder;
 
+    /**
+     * Retrieve parameters.
+     * @param context Application context
+     * @param camera Camera is use
+     */
     public ImageSurfaceView(Context context, Camera camera) {
         super(context);
         this.camera = camera;
@@ -22,6 +30,10 @@ public class ImageSurfaceView extends SurfaceView implements SurfaceHolder.Callb
         this.surfaceHolder.addCallback(this);
     }
 
+    /**
+     * On creation, start the preview.
+     * @param holder
+     */
     @Override
     public void surfaceCreated(SurfaceHolder holder) {
         try {
@@ -37,6 +49,10 @@ public class ImageSurfaceView extends SurfaceView implements SurfaceHolder.Callb
 
     }
 
+    /**
+     * Release the camera on destruction.
+     * @param holder
+     */
     @Override
     public void surfaceDestroyed(SurfaceHolder holder) {
         this.camera.stopPreview();

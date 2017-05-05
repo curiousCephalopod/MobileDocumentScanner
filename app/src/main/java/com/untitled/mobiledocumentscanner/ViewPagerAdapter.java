@@ -9,16 +9,30 @@ import android.widget.ImageView;
 import java.util.ArrayList;
 
 /**
- * Created by J on 24-Apr-17.
+ * Class designed and implemented by Joshua (eeu67d).
+ * Manages page image views,
  */
 
 public class ViewPagerAdapter extends PagerAdapter{
+    // Application context
     private Context context;
+    // List of images in a document
     private ArrayList<Page> pages;
+    // Is the view fullscreen
     private boolean fullscreen;
+    // Document we are viewing
     private int docID;
+    // IP address of server
     private String ip;
 
+    /**
+     * Retrieve parameters
+     * @param context Application context
+     * @param pages List of pages
+     * @param fullscreen Fullscreen boolean
+     * @param docID ID of document
+     * @param ip IP of server
+     */
     public ViewPagerAdapter(Context context, ArrayList<Page> pages, Boolean fullscreen, int docID, String ip) {
         this.context = context;
         this.pages = pages;
@@ -27,6 +41,10 @@ public class ViewPagerAdapter extends PagerAdapter{
         this.ip = ip;
     }
 
+    /**
+     * Return number of items in the adapter.
+     * @return
+     */
     @Override
     public int getCount() {
         return pages.size();
@@ -37,9 +55,16 @@ public class ViewPagerAdapter extends PagerAdapter{
         return view == ((ImageView) object);
     }
 
+    /**
+     * Instantiate a single image.
+     * @param container
+     * @param i
+     * @return
+     */
     @Override
     public Object instantiateItem(final ViewGroup container, int i) {
         final ImageView imageView = new ImageView(context);
+        // Set the image from the page
         imageView.setScaleType(ImageView.ScaleType.FIT_CENTER);
         imageView.setImageBitmap(pages.get(i).getImage());
         if (!fullscreen) {
@@ -47,13 +72,16 @@ public class ViewPagerAdapter extends PagerAdapter{
                 imageView.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
+                        // Stare the full screen view
                         ImageActivity.start(context, pages, docID, ip);
                     }
                 });
             } else {
+                // If its the placeholder
                 imageView.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
+                        // Start the camera view
                         CameraActivity.start(context, docID, 1, ip);
                     }
                 });
@@ -64,6 +92,12 @@ public class ViewPagerAdapter extends PagerAdapter{
         return imageView;
     }
 
+    /**
+     * Remove an item.
+     * @param container
+     * @param i
+     * @param obj
+     */
     @Override
     public void destroyItem(ViewGroup container, int i, Object obj){
         container.removeView((ImageView) obj);

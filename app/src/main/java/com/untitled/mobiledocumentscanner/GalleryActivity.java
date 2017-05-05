@@ -30,36 +30,55 @@ public class GalleryActivity extends AppCompatActivity {
     private ArrayList<Document> documents;
     // Default user ID, in leu of login
     private int userID = 1;
-    // URLs
+    // URLs to access PHP scripts
     private String urlDocuments;
     private String urlCover;
 
+    // IP address of server
     private String ip;
 
+    /**
+     * Initialise the activity using parameters.
+     * @param context Application context
+     * @param ip Server address
+     */
     public static void start(Context context, String ip) {
+        // Create a new intent and store the parameters
         Intent intent = new Intent(context, GalleryActivity.class);
         intent.putExtra("ip", ip);
 
+        // Start the new activity
         context.startActivity(intent);
     }
 
+    /**
+     * Initialise variables and start ASyncTasks.
+     * @param savedInstanceState
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_gallery);
 
+        // Initialise the parser
         jParser = new JSONParser();
 
+        // Retrieve the IP from the bundle
         Bundle bundle = getIntent().getExtras();
         //ip = bundle.getString("ip");
         ip = "lrhvbzvdud.localtunnel.me";
 
+        // Create the URLs from the IP
         urlDocuments = "http://" + ip + "/DocumentScanner/retrieve_documents.php";
         urlCover = "http://" + ip + "/DocumentScanner/retrieve_cover.php";
 
+        // Retrieve cover images
         new retrieveImages().execute();
     }
 
+    /**
+     * On resume, update the gallery
+     */
     @Override
     public void onResume() {
         super.onResume();
@@ -67,11 +86,21 @@ public class GalleryActivity extends AppCompatActivity {
         new retrieveImages().execute();
     }
 
+    /**
+     * ASyncTask to retrieve images off the main thread.
+     */
     class retrieveImages extends AsyncTask<String, String, String> {
+        // Temporary document list
         ArrayList<Document> temp;
 
+        /**
+         * Perform the HTTP request in the background.
+         * @param args
+         * @return
+         */
         @Override
         protected String doInBackground(String... args) {
+            // Initialise the array
             temp = new ArrayList<>();
             // Building Parameters
             List<NameValuePair> docParams = new ArrayList<NameValuePair>();
@@ -90,6 +119,7 @@ public class GalleryActivity extends AppCompatActivity {
                     // Loop for each doc
                     for (int i = 0; i < documentsJSON.length(); i++) {
                         JSONObject docObject = documentsJSON.getJSONObject(i);
+                        // Retrieve the document's properties
                         int id = docObject.getInt("docID");
                         String title = docObject.getString("docTitle");
                         String date = docObject.getString("dateCreated");
@@ -105,8 +135,10 @@ public class GalleryActivity extends AppCompatActivity {
                         // Check for Success
                         int coverSuccess = coverJson.getInt("success");
                         if (coverSuccess == 1) {
+                            // Decode the cover from a string to a byte array
                             cover = Base64.decode(coverJson.getString("image"), Base64.DEFAULT);
                         } else {
+                            // Overwise set a placeholder
                             cover = BitmapUtil.getBytes(BitmapFactory.decodeResource(getResources(), R.drawable.imagepreview));
                         }
 
@@ -122,12 +154,18 @@ public class GalleryActivity extends AppCompatActivity {
             return null;
         }
 
+        /**
+         * After execution, set up the adapters and views
+         * @param fileURL
+         */
         protected void onPostExecute(String fileURL) {
             runOnUiThread(new Runnable() {
                 public void run() {
+                    // If there is no documents, add a placeholder
                     temp.add(new Document(-1, "New Doc", "", 0, BitmapUtil.getBytes(BitmapFactory.decodeResource(getResources(), R.drawable.imageadd))));
                     documents = temp;
 
+                    // Set up the views
                     RecyclerView recyclerView = (RecyclerView) findViewById(R.id.imagegallery);
                     recyclerView.setHasFixedSize(true);
 

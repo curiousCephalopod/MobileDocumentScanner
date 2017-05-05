@@ -22,7 +22,8 @@ import java.io.UnsupportedEncodingException;
 import java.util.List;
 
 /**
- * Created by J on 25-Apr-17.
+ * Sourced from StackOverflow.
+ * Makes a HTTP request and parses the return.
  */
 
 public class JSONParser {
@@ -36,7 +37,7 @@ public class JSONParser {
     }
 
     // function get json from url
-    // by making HTTP POST or GET mehtod
+    // by making HTTP POST or GET method
     public JSONObject makeHttpRequest(String url, String method,
                                       List<NameValuePair> params) {
 
