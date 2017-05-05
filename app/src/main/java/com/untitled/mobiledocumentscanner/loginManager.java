@@ -7,7 +7,7 @@ package com.untitled.mobiledocumentscanner;
 
 /**
  *
- * @author Ed
+ * @author Edward Glen
  */
 public class loginManager {
     /*
