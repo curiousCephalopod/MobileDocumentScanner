@@ -1,3 +1,4 @@
+--Created by Edward Glen & Joshua Henderson
 CREATE TABLE Login
 (
   userID INT(16) NOT NULL AUTO_INCREMENT,
