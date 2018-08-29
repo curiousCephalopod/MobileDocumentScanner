@@ -9,7 +9,7 @@ Team Untitled consisted of:
   
   Edward Glen (Drago6777): Database designer and developer
   
-  Amber-Louise Diskin: Class designer and developer
+  Amber-Louise Diskin (Ambzillius): Class designer and developer
   
 Team Untitled also consisted of two more members who neglected to contribute.
 
