@@ -1,9 +1,14 @@
 MobileDocumentScanner was a project for the second year Software Hut module, designed to the specification of a local company, by Team Untitled.
+
 It was intended to scan pages of a document using an android mobile phone camera, perform optical character recognition to automatically tag descriptors, encrypt and save them to a server.
 In it's current state, the login mechanism and encryption is incomplete due to time constraints with a reduced size team, and the server connectivity was provided through tunneling software for the test environment.
+
 Team Untitled consisted of:
+
   Joshua Henderson (HendersonJ97): Team coordinator and lead developer
+  
   Edward Glen (Drago6777): Database designer and developer
+  
   Amber-Louise Diskin: Class designer and developer
   
 Team Untitled also consisted of two more members who neglected to contribute.
