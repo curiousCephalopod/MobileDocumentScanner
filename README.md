@@ -5,11 +5,11 @@ In it's current state, the login mechanism and encryption is incomplete due to t
 
 Team Untitled consisted of:
 
-  Joshua Henderson (HendersonJ97): Team coordinator and lead developer
+  Joshua Henderson (HendersonJ97): Team coordinator, lead Android and PHP developer
   
-  Edward Glen (Drago6777): Database designer and developer
+  Edward Glen (Drago6777): Database designer and Android developer
   
-  Amber-Louise Diskin (Ambzillius): Class designer and developer
+  Amber-Louise Diskin (Ambzillius): Class designer and Android developer
   
 Team Untitled also consisted of two more members who neglected to contribute.
 
