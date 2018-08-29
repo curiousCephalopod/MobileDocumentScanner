@@ -33,6 +33,7 @@ app/src/main/java/com/untitled/mobiledocumentscanner/ImageSurfaceView.java - And
 app/src/main/java/com/untitled/mobiledocumentscanner/JSONParser.java - HTTP request and parse a JSON object
 
 app/src/main/java/com/untitled/mobiledocumentscanner/LoginActivity.java - Android activity class to provide an email login mechanism
+
 Not currently completed, system uses example details to provide identification
 
 app/src/main/java/com/untitled/mobiledocumentscanner/Page.java - Serializable data structure to provide information about a single document page
